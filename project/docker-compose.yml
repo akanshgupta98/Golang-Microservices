@@ -40,4 +40,15 @@ services:
     environment:
       - DSN= host=postgres user=postgres password=mysecret database=users sslmode=disable timezone=UTC connect_timeout=5
 
+  mongo:
+    image: 'mongo:4.2.16-bionic'
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABSE=logs
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    volumes:
+      - ./db-data/mongo:/data/db
+
     
