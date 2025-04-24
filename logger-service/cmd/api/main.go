@@ -19,7 +19,7 @@ type Config struct {
 const (
 	webPort  = "80"
 	rpcPort  = "5001"
-	mongoURL = "mongodb://localhost:27017"
+	mongoURL = "mongodb://mongo:27017"
 	gRpcPort = "50001"
 )
 
@@ -74,13 +74,22 @@ func connectToMongo() (*mongo.Client, error) {
 		Username: "admin",
 		Password: "password",
 	})
-
+	timeout := 50 * time.Second
+	clientOptions.ServerSelectionTimeout = &timeout
 	// connect
 	c, err := mongo.Connect(context.TODO(), clientOptions)
 	if err != nil {
 		log.Println("Error connecting:", err)
 		return nil, err
 	}
+
+	log.Println("Successfully connected to mongo db!!")
+	// err = c.Ping(context.Background(), nil)
+	// if err != nil {
+	// 	log.Println("PING FAILED")
+	// 	return nil, err
+	// }
+	// log.Println("PING SUCCESS!!")
 
 	return c, nil
 
