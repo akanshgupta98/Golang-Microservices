@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 )
 
@@ -15,6 +16,14 @@ type RequestPayload struct {
 	Action string      `json:"action"`
 	Auth   AuthPayload `json:"auth,omitempty"`
 	Log    LogPayload  `json:"log,omitempty"`
+	Mail   MailPayload `json:"mail,omitempty"`
+}
+
+type MailPayload struct {
+	From    string `json:"from"`
+	To      string `json:"to"`
+	Subject string `json:"subject"`
+	Message string `json:"message"`
 }
 
 type LogPayload struct {
@@ -49,9 +58,41 @@ func (app *Config) HandleSubmission(w http.ResponseWriter, r *http.Request) {
 
 	case "log":
 		app.logEntry(w, rp.Log)
+	case "mail":
+		app.sendMail(w, rp.Mail)
 	default:
 		app.errorJSON(w, errors.New("unknown action"))
 	}
+
+}
+
+func (app *Config) sendMail(w http.ResponseWriter, payload MailPayload) {
+	// Create a request to mail microservice;
+	requestURL := "http://mail-service/send"
+
+	jsonBytes, _ := json.MarshalIndent(payload, "", "\t")
+
+	request, err := http.NewRequest("POST", requestURL, bytes.NewBuffer(jsonBytes))
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+	client := http.Client{}
+	response, err := client.Do(request)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusAccepted {
+		app.errorJSON(w, fmt.Errorf("unable to send mail"), http.StatusInternalServerError)
+		return
+	}
+	var result jsonResponse
+	result.Error = false
+	result.Message = "Sent mail"
+
+	app.writeJSON(w, http.StatusAccepted, result)
 
 }
 
