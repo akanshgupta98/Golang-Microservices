@@ -40,6 +40,17 @@ services:
       mode: replicated
     environment:
       - DSN= host=postgres user=postgres password=mysecret database=users sslmode=disable timezone=UTC connect_timeout=5
+  
+  listener-service:
+    build:
+      context: ./../listener-service
+      dockerfile: ./../listener-service/listener-service.dockerfile
+    # REQUIRED ONLY IF I WANT TO EXPOSE IT TO LOCAL SYSTEM.
+    # ports:
+    #   - "8081:80"
+    deploy:
+      replicas: 1
+      mode: replicated
 
   mongo:
     image: 'mongo:4.2.16-bionic'
@@ -80,6 +91,16 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+
+  rabbitmq:
+    image: 'rabbitmq:3.9-alpine'
+    ports:
+      - "5672:5672"
+    deploy:
+      mode: replicated
+      replicas: 1
+    volumes:
+      - ./db-data/rabbitmq/:/var/lib/rabbitmq/
 
     
 
